@@ -10,15 +10,18 @@ using System.Security.Cryptography;
 using System.Text;
 using API.DTOs;
 using Microsoft.EntityFrameworkCore;
+using API.Services;
+using API.Interfaces;
 
 namespace API.Controllers
 {
 
-    public class AcountController(DataContext context) : BaseApiController
+    public class AcountController(DataContext context, 
+            ITokenService tokenService) : BaseApiController
     {
         
        [HttpPost("register")]
-       public async Task<ActionResult<AppUser>> Register(RegisterDto registerDto)
+       public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
        {
             if(await IsUserExist(registerDto.UserName))
             {
@@ -36,11 +39,14 @@ namespace API.Controllers
             context.Users.Add(user);
             await context.SaveChangesAsync();
 
-            return user;
+            return new UserDto {
+                UserName = user.UserName,
+                Token = tokenService.CreateToken(user)
+            } ;
        }
 
        [HttpPost("login")]
-       public async Task<ActionResult<AppUser>> Login(LoginDto loginDto)
+       public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
        {
             var user = await context.Users.SingleOrDefaultAsync(x=>
                 x.UserName == loginDto.UserName.ToLower()
@@ -61,7 +67,11 @@ namespace API.Controllers
                     return Unauthorized("Invalid password");
                 }
             }
-            return user;
+            
+            return new UserDto {
+                UserName = user.UserName,
+                Token = tokenService.CreateToken(user)
+            };
        }
 
        private async Task<bool> IsUserExist(string userName)
