@@ -12,11 +12,13 @@ using API.DTOs;
 using Microsoft.EntityFrameworkCore;
 using API.Services;
 using API.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
 
-    public class AcountController(DataContext context, 
+    [AllowAnonymous]
+    public class AccountController(DataContext context, 
             ITokenService tokenService) : BaseApiController
     {
         
